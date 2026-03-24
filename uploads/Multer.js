@@ -1,19 +1,29 @@
-const multer = require("multer");
+const Multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
+
 const uploadFolder = "uploads";
 
+if (!fs.existsSync(uploadFolder)) fs.mkdirSync(uploadFolder);
 
-if (!fs.existsSync(uploadFolder)) {
-  fs.mkdirSync(uploadFolder);
-}
 
-const storage = multer.diskStorage({
+const ensureFolder = (folder) => {
+  const fullPath = path.join(uploadFolder, folder);
+  if (!fs.existsSync(fullPath)) fs.mkdirSync(fullPath);
+  return fullPath;
+};
+
+
+const storage = Multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadFolder);
+    
+    const folder = req.body.type === "lost" ? "lost" : "found";
+    const fullPath = ensureFolder(folder);
+    cb(null, fullPath);
   },
   filename: (req, file, cb) => {
+
     const uniqueName = Date.now() + "-" + file.originalname;
     cb(null, uniqueName);
   },
@@ -26,6 +36,6 @@ const fileFilter = (req, file, cb) => {
 };
 
 
-const upload = multer({ storage, fileFilter });
+const upload = Multer({ storage, fileFilter });
 
 module.exports = upload;
