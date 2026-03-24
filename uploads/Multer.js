@@ -1,16 +1,21 @@
-const express = require("express");
-const router = express.Router();
-const Lost = require("../models/LostModel");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 
+const uploadFolder = "uploads";
+
+
+if (!fs.existsSync(uploadFolder)) {
+  fs.mkdirSync(uploadFolder);
+}
 
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/"); 
+  destination: (req, file, cb) => {
+    cb(null, uploadFolder);
   },
-  filename: function (req, file, cb) {
-    cb(null, "lost-" + Date.now() + path.extname(file.originalname));
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + "-" + file.originalname;
+    cb(null, uniqueName);
   },
 });
 
@@ -20,4 +25,7 @@ const fileFilter = (req, file, cb) => {
   else cb(new Error("Only image files are allowed"), false);
 };
 
+
 const upload = multer({ storage, fileFilter });
+
+module.exports = upload;
