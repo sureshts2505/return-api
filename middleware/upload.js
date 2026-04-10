@@ -6,7 +6,6 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "returnMe",
-    allowed_formats: ["jpg", "png", "jpeg"],
   },
 });
 
