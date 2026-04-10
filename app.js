@@ -2,7 +2,6 @@ require("./db");
 
 const express = require("express");
 const cors = require("cors");
-const path = require("path");
 
 const lostRoutes = require("./routes/lostRoutes");
 const foundRoutes = require("./routes/foundRoutes");
@@ -14,10 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-
-// ✅ ROUTES
 app.use("/lost", lostRoutes);
 app.use("/found", foundRoutes);
 app.use("/auth", authRoutes);

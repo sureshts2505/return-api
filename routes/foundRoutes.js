@@ -1,25 +1,23 @@
 const express = require("express");
 const router = express.Router();
 const Found = require("../models/FoundModel"); 
+
+
 const multer = require("multer");
-const path = require("path");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("../config/cloudinary");
 
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/"); 
-  },
-  filename: function (req, file, cb) {
-    cb(null, "found-" + Date.now() + path.extname(file.originalname));
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "returnMe",
+    allowed_formats: ["jpg", "png", "jpeg"],
   },
 });
 
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image/")) cb(null, true);
-  else cb(new Error("Only image files are allowed"), false);
-};
+const upload = multer({ storage });
 
-const upload = multer({ storage, fileFilter });
 
 
 router.get("/", async (req, res) => {
@@ -52,7 +50,7 @@ router.post("/", upload.single("image"), async (req, res) => {
       location: req.body.location,
       Date: req.body.Date,
       contact: req.body.contact,
-      image: req.file ? req.file.filename : "",
+      image: req.file ? req.file.path : "", // 🔥 CHANGE (URL)
     });
 
     await newFound.save();
@@ -62,6 +60,7 @@ router.post("/", upload.single("image"), async (req, res) => {
   }
 });
 
+// UPDATE
 router.put("/:id", upload.single("image"), async (req, res) => {
   try {
     const updatedData = {
@@ -72,10 +71,19 @@ router.put("/:id", upload.single("image"), async (req, res) => {
       Date: req.body.Date,
       contact: req.body.contact,
     };
-    if (req.file) updatedData.image = req.file.filename;
 
-    const updatedItem = await Found.findByIdAndUpdate(req.params.id, updatedData, { new: true });
+    if (req.file) {
+      updatedData.image = req.file.path; // 🔥 CHANGE
+    }
+
+    const updatedItem = await Found.findByIdAndUpdate(
+      req.params.id,
+      updatedData,
+      { new: true }
+    );
+
     if (!updatedItem) return res.status(404).json({ error: "Item not found" });
+
     res.status(200).json(updatedItem);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -87,6 +95,7 @@ router.delete("/:id", async (req, res) => {
   try {
     const deletedItem = await Found.findByIdAndDelete(req.params.id);
     if (!deletedItem) return res.status(404).json({ error: "Item not found" });
+
     res.status(200).json({ message: "Item deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
